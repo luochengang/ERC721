@@ -5,11 +5,18 @@ pragma solidity ^0.8.0;
 
 import "./IERC721.sol";
 import "./ownable.sol";
+import "./IERC721Metadata.sol";
 
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard
  */
-contract ERC721 is IERC721, Ownable {
+contract ERC721 is IERC721, Ownable, IERC721Metadata {
+
+    // Token name
+    string private _name;
+
+    // Token symbol
+    string private _symbol;
 
     // Mapping from token ID to owner address
     mapping(uint256 => address) private _tokenToOwner;
@@ -22,6 +29,44 @@ contract ERC721 is IERC721, Ownable {
 
     // Mapping from owner to operator approvals
     mapping(address => mapping(address => bool)) private _operatorApprovals;
+
+    /**
+     * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
+     */
+    constructor(string memory name_, string memory symbol_) {
+        _name = name_;
+        _symbol = symbol_;
+    }
+
+    /**
+     * @dev See {IERC721Metadata-name}.
+     */
+    function name() public view override returns (string memory) {
+        return _name;
+    }
+
+    /**
+     * @dev See {IERC721Metadata-symbol}.
+     */
+    function symbol() public view override returns (string memory) {
+        return _symbol;
+    }
+
+    /**
+     * @dev See {IERC721Metadata-tokenURI}.
+     */
+    function tokenURI(uint256 tokenId) public view onlyMinted(tokenId) override returns (string memory) {
+        string memory baseURI = _baseURI();
+        return string(abi.encodePacked(baseURI, toString(tokenId)));
+    }
+
+    /**
+     * @dev Base URI for computing {tokenURI}.
+     *      URI for each token = `baseURI` + `tokenId`
+     */
+    function _baseURI() internal pure returns (string memory) {
+        return "https://image.baidu.com/search/detail?tokenId=";
+    }
 
     /**
      * @dev See {IERC721-balanceOf}.
@@ -271,4 +316,24 @@ contract ERC721 is IERC721, Ownable {
         address to,
         uint256 tokenId
     ) internal  {}
+    
+    function toString(uint256 value) internal pure returns (string memory) {
+        if (value == 0) {
+            return "0";
+        }
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+            value /= 10;
+        }
+        return string(buffer);
+    }
+
 }
